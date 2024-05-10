@@ -1,4 +1,4 @@
-USING: arrays kernel math math.functions multiline peg peg.ebnf random ranges sequences splitting ;
+USING: arrays grouping kernel math math.functions multiline peg peg.ebnf random ranges sequences sets ;
 
 IN: translation
 
@@ -8,14 +8,20 @@ CONSTANT: mut-rate 1/3 ! rate of mutation
 
 : num-muts ( length -- freq ) mut-rate * floor ;
 
-EBNF: process [=[
+: process ( code -- processed ) "UACG" within ; ! 3 group
 
-rule = ("U" | "A" | "C" | "G" | (.)~)+ => [[ [ ignore = ] reject dup length 0 swap 3 <range> >array over length 3 mod zero? [ rest but-last ] [ rest ] if split-indices ]]
+: mutation ( symbols -- mutated ) 
+!    "" join
+    dup length mut-rate * over length 4 - randoms [ dup 3 < [ 3 + ] when ] map
+    [
+        { 
+          [ "UABG" random spin insert-nth ] ! insertion
+          [ swap remove-nth ] ! deletion
+          [ "UABG" random spin [ clone set-nth ] keep ] ! substitution
+        } random call( x y -- z )
+    ] each 3 group " " join
+; 
 
-]=]
-
-: mutation ( symbols -- mutated ) dup drop ; ! TODO
-
-: code->string ( code-list -- code-string ) dup drop ; ! after mutation is applied.the string output is what will be fed into the second parser
+: code->string ( code-list -- code-string ) " " join ; ! after mutation is applied.the string output is what will be fed into the second parser
 
 ! PRIVATE>
