@@ -29,11 +29,36 @@ CONSTANT: mut-rate 1/3 ! rate of mutation
     ] each 3 group " " join
 ; 
 
-! "AUG" is the Met amino acid
+: compose-all ( seq -- quot )
+    [ ] [ compose ] reduce ;
+
 EBNF: parse-translation [=[
-    start = "AUG" 
+    start = "AUG"
+    phe = "UUU" | "UUC"                                 => [[ [ phe ] ]]
+    leu = "UUA" | "UUG" | "CUU" | "CUC" | "CUA" | "CUG" => [[ [ leu ] ]]
+    ile = "AUU" | "AUC" | "AUA"                         => [[ [ ile ] ]]
+    met = "AUG"                                         => [[ [ met ] ]]
+    val = "GUU" | "GUC" | "GUA" | "GUG"                 => [[ [ val ] ]]
+    ser = "UCU" | "UCC" | "UCA" | "UCG" | "AGU" | "AGC" => [[ [ ser ] ]]
+    pro = "CCU" | "CCC" | "CCA" | "CCG"                 => [[ [ pro ] ]]
+    thr = "ACU" | "ACC" | "ACA" | "ACG"                 => [[ [ thr ] ]]
+    ala = "GCU" | "GCC" | "GCA" | "GCG"                 => [[ [ ala ] ]]
+    tyr = "UAU" | "UAC"                                 => [[ [ tyr ] ]]
+    his = "CAU" | "CAC"                                 => [[ [ his ] ]]
+    gln = "CAA" | "CAG"                                 => [[ [ gln ] ]]
+    asn = "AAU" | "AAC"                                 => [[ [ asn ] ]]
+    lys = "AAA" | "AAG"                                 => [[ [ lys ] ]]
+    asp = "GAU" | "GAC"                                 => [[ [ asp ] ]]
+    glu = "GAA" | "GAG"                                 => [[ [ glu ] ]]
+    cys = "UGU" | "UGC"                                 => [[ [ cys ] ]]
+    trp = "UGG"                                         => [[ [ trp ] ]]
+    arg = "CGU" | "CGC" | "CGA" | "CGG" | "AGA" | "AGG" => [[ [ arg ] ]]
+    gly = "GGU" | "GGC" | "GGA" | "GGG"                 => [[ [ gly ] ]]
     end = ("U" | "A" | "G" | "C")+ ?[ length 2 <= ]? 
-    code = "a"
+
+    amino-acid = phe|leu|ile|met|val|ser|pro|thr|ala|tyr|his|gln|asn|lys|asp|glu|cys|trp|arg|gly
+    space = " "
+    code = start~ space~ (amino-acid space~)+ end~      => [[ compose-all ]]
 ]=]
 
 ! PRIVATE>
