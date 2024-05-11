@@ -1,4 +1,4 @@
-USING: arrays grouping kernel math math.functions multiline peg peg.ebnf random ranges sequences sets strings ;
+USING: arrays grouping io kernel math math.functions multiline peg peg.ebnf random ranges sequences sets strings vector ;
 
 IN: translation
 
@@ -8,12 +8,13 @@ CONSTANT: mut-rate 1/3 ! rate of mutation
 
 : num-muts ( length -- freq ) mut-rate * floor ;
 
+ERROR: incorrect-start-end-codons program ; ! "Program should start and end with the proper codons."
+
 : check ( code -- verified_code ) 
     dup
-    [ 3 0 spin <slice> >string "AUG" = ]
-    [ dup length over length 3 - spin <slice> >string { "UGA" "UAA" "UAG" } member? ] ! maybe also add the two letter one
-    bi and swap '[ _ ] [ "Program should start and end with the proper codons." throw ] if
-;
+    [ "AUG" head? ]
+    [ 3 tail* { "UGA" "UAA" "UAG" } member? ] ! maybe also add the two letter one
+    bi and [ incorrect-start-end-codons ] unless ;
 
 : process ( code -- processed ) "UACG" within ; ! 3 group
 
@@ -26,11 +27,58 @@ CONSTANT: mut-rate 1/3 ! rate of mutation
           [ swap remove-nth ] ! deletion
           [ "UABG" random spin [ clone set-nth ] keep ] ! substitution
         } random call( x y -- z )
-    ] each 3 group " " join
-; 
+    ] each 3 group " " join ; 
 
 : compose-all ( seq -- quot )
     [ ] [ compose ] reduce ;
+
+: get-2 ( seq -- seq second first )
+    >vector [ pop ] keep [ pop ] keep spin ;
+
+: get-1 ( seq -- seq first )
+    >vector [ pop ] keep swap ;
+
+! No structure for the stack, since there will be no environment I think
+
+: phe ( stack -- stack ) [ read1 suffix ] ; ! read a character
+
+: leu ( stack -- stack ) 1 suffix ; ! push 1 
+
+: ile ( stack -- stack ) [ get-1 write1 ] ; ! print character and pop it
+
+: met ( stack -- stack ) [ get-2 mod suffix ] ; ! mod a b ;
+
+: val ( stack -- stack ) ; ! dip 
+
+: ser ( stack -- stack ) ; ! repn
+
+: pro ( stack -- stack ) ; ! compose
+
+: thr ( stack -- stack ) ; ! zap
+
+: ala ( stack -- stack ) ; ! dup
+
+: tyr ( stack -- stack ) ; ! unit
+
+: his ( stack -- stack ) [ ] suffix ; ! push empty quote
+
+: gln ( stack -- stack ) ; ! cons
+
+: asn ( stack -- stack ) [ get-2 + suffix ] ; ! +
+
+: lys ( stack -- stack ) [ get-2 - suffix ] ; ! -
+
+: asp ( stack -- stack ) [ get-2 * suffix ] ; ! *
+
+: glu ( stack -- stack ) [ get-2 / suffix ] ; ! /
+
+: cys ( stack -- stack ) [ get-2 ^ suffix ] ; ! ^
+
+: trp ( stack -- stack ) [ get-2 logn suffix ] ; ! logn x n (maybe change)
+
+: arg ( stack -- stack ) get-1 call( stack -- stack ); ! i/call
+
+: gly ( stack -- stack ) get-2 swap 2array append ; ! swap
 
 EBNF: parse-translation [=[
     start = "AUG"
