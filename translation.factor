@@ -8,11 +8,10 @@ CONSTANT: mut-rate 1/3 ! rate of mutation
 
 : num-muts ( length -- freq ) mut-rate * floor ;
 
-! DOESNT WORK!! FIXX!!
 : check ( code -- verified_code ) 
     dup
     [ 3 0 spin <slice> >string "AUG" = ]
-    [ dup length 1 - over length 4 - <slice> >string { "UGA" "UAA" "UAG" } member? ] ! maybe also add the two letter one
+    [ dup length over length 3 - spin <slice> >string { "UGA" "UAA" "UAG" } member? ] ! maybe also add the two letter one
     bi and swap '[ _ ] [ "Program should start and end with the proper codons." throw ] if
 ;
 
@@ -29,6 +28,7 @@ CONSTANT: mut-rate 1/3 ! rate of mutation
         } random call( x y -- z )
     ] each 3 group " " join
 ; 
+
 ! "AUG" is the Met amino acid
 EBNF: parse-translation [=[
     start = "AUG" 
