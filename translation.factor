@@ -23,9 +23,9 @@ ERROR: incorrect-start-end-codons program ; ! "Program should start and end with
     dup length num-muts over length 4 - randoms [ dup 3 < [ 3 + ] when ] map
     [
         { 
-          [ "UABG" random spin insert-nth ] ! insertion
+          [ "UACG" random spin insert-nth ] ! insertion
           [ swap remove-nth ] ! deletion
-          [ "UABG" random spin [ clone set-nth ] keep ] ! substitution
+          [ "UACG" random spin [ clone set-nth ] keep ] ! substitution
         } random call( x y -- z )
     ] each 3 group " " join ; 
 
@@ -50,7 +50,7 @@ ERROR: incorrect-start-end-codons program ; ! "Program should start and end with
 
 : val ( stack -- stack ) [ get-2 dip suffix ] suffix ; ! dip 
 
-: ser ( stack -- stack ) get-2 swap [ call( stack -- stack ) ] curry times ; ! quote n repn
+: ser ( stack -- stack ) get-2 swap [ call( stack -- stack ) ] curry times ; inline ! quote n repn
 
 : pro ( stack -- stack ) [ get-2 compose suffix ] suffix ; ! compose
 
@@ -86,7 +86,7 @@ EBNF: parse-translation [=[
     phe = ("UUU" | "UUC")                                 => [[ [ phe ] ]]
     leu = ("UUA" | "UUG" | "CUU" | "CUC" | "CUA" | "CUG") => [[ [ leu ] ]]
     ile = ("AUU" | "AUC" | "AUA")                         => [[ [ ile ] ]]
-    met = "AUG"                                         => [[ [ met ] ]]
+    met = "AUG"                                           => [[ [ met ] ]]
     val = ("GUU" | "GUC" | "GUA" | "GUG")                 => [[ [ val ] ]]
     ser = ("UCU" | "UCC" | "UCA" | "UCG" | "AGU" | "AGC") => [[ [ ser ] ]]
     pro = ("CCU" | "CCC" | "CCA" | "CCG")                 => [[ [ pro ] ]]
@@ -100,10 +100,10 @@ EBNF: parse-translation [=[
     asp = ("GAU" | "GAC")                                 => [[ [ asp ] ]]
     glu = ("GAA" | "GAG")                                 => [[ [ glu ] ]]
     cys = ("UGU" | "UGC")                                 => [[ [ cys ] ]]
-    trp = "UGG"                                         => [[ [ trp ] ]]
+    trp = "UGG"                                           => [[ [ trp ] ]]
     arg = ("CGU" | "CGC" | "CGA" | "CGG" | "AGA" | "AGG") => [[ [ arg ] ]]
     gly = ("GGU" | "GGC" | "GGA" | "GGG")                 => [[ [ gly ] ]]
-    unknown = ("U" | "A" | "G" | "C")+                      => [[ [ ] ]]
+    unknown = ("U" | "A" | "G" | "C")+                    => [[ [ ] ]]
 
     amino-acid = phe|leu|ile|met|val|ser|pro|thr|ala|tyr|his|gln|asn|lys|asp|glu|cys|trp|arg|gly|unknown
     space = " "
