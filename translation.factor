@@ -1,4 +1,4 @@
-USING: arrays grouping io kernel math math.functions multiline peg peg.ebnf random ranges sequences sets strings vector ;
+USING: arrays grouping io kernel math math.functions multiline peg peg.ebnf random ranges sequences sets strings ;
 
 IN: translation
 
@@ -33,52 +33,52 @@ ERROR: incorrect-start-end-codons program ; ! "Program should start and end with
     [ ] [ compose ] reduce ;
 
 : get-2 ( seq -- seq second first )
-    >vector [ pop ] keep [ pop ] keep spin ;
+    2 cut* first2 ;
 
 : get-1 ( seq -- seq first )
-    >vector [ pop ] keep swap ;
+    1 cut* first ;
 
 ! No structure for the stack, since there will be no environment I think
 
-: phe ( stack -- stack ) [ read1 suffix ] ; ! read a character
+: phe ( stack -- stack ) [ read1 suffix ] suffix ; ! read a character
 
 : leu ( stack -- stack ) 1 suffix ; ! push 1 
 
-: ile ( stack -- stack ) [ get-1 write1 ] ; ! print character and pop it
+: ile ( stack -- stack ) [ get-1 write1 ] suffix ; ! print character and pop it
 
-: met ( stack -- stack ) [ get-2 mod suffix ] ; ! mod a b ;
+: met ( stack -- stack ) [ get-2 mod suffix ] suffix ; ! mod a b ;
 
-: val ( stack -- stack ) ; ! dip 
+: val ( stack -- stack ) [ get-2 dip suffix ] suffix ; ! dip 
 
-: ser ( stack -- stack ) ; ! repn
+: ser ( stack -- stack ) get-2 swap [ call( stack -- stack ) ] curry times ; ! quote n repn
 
-: pro ( stack -- stack ) ; ! compose
+: pro ( stack -- stack ) [ get-2 compose suffix ] suffix ; ! compose
 
-: thr ( stack -- stack ) ; ! zap
+: thr ( stack -- stack ) [ get-1 drop ] suffix ; ! zap
 
-: ala ( stack -- stack ) ; ! dup
+: ala ( stack -- stack ) [ get-1 dup 2array append ] suffix ; ! dup
 
-: tyr ( stack -- stack ) ; ! unit
+: tyr ( stack -- stack ) [ get-2 over 3array append ] suffix ; ! over
 
 : his ( stack -- stack ) [ ] suffix ; ! push empty quote
 
-: gln ( stack -- stack ) ; ! cons
+: gln ( stack -- stack ) [ get-2 curry suffix ] suffix ; ! cons
 
-: asn ( stack -- stack ) [ get-2 + suffix ] ; ! +
+: asn ( stack -- stack ) [ get-2 + suffix ] suffix ; ! +
 
-: lys ( stack -- stack ) [ get-2 - suffix ] ; ! -
+: lys ( stack -- stack ) [ get-2 - suffix ] suffix ; ! -
 
-: asp ( stack -- stack ) [ get-2 * suffix ] ; ! *
+: asp ( stack -- stack ) [ get-2 * suffix ] suffix ; ! *
 
-: glu ( stack -- stack ) [ get-2 / suffix ] ; ! /
+: glu ( stack -- stack ) [ get-2 / suffix ] suffix ; ! /
 
-: cys ( stack -- stack ) [ get-2 ^ suffix ] ; ! ^
+: cys ( stack -- stack ) [ get-2 ^ suffix ] suffix ; ! ^
 
-: trp ( stack -- stack ) [ get-2 logn suffix ] ; ! logn x n (maybe change)
+: trp ( stack -- stack ) [ get-2 logn suffix ] suffix ; ! logn x n (maybe change)
 
-: arg ( stack -- stack ) get-1 call( stack -- stack ); ! i/call
+: arg ( stack -- stack ) get-1 call( stack -- stack ) ; inline ! i/call
 
-: gly ( stack -- stack ) get-2 swap 2array append ; ! swap
+: gly ( stack -- stack ) [ get-2 swap 2array append ] suffix ; ! swap
 
 EBNF: parse-translation [=[
     start = "AUG"
