@@ -1,4 +1,4 @@
-USING: arrays grouping io kernel math math.functions multiline peg peg.ebnf random ranges sequences sets strings ;
+USING: arrays grouping io kernel math math.functions math.parser multiline peg peg.ebnf random ranges sequences sets strings ;
 
 IN: translation
 
@@ -20,7 +20,7 @@ ERROR: incorrect-start-end-codons program ; ! "Program should start and end with
 
 : mutation ( symbols -- mutated ) 
 !    "" join
-    dup length mut-rate * over length 4 - randoms [ dup 3 < [ 3 + ] when ] map
+    dup length num-muts over length 4 - randoms [ dup 3 < [ 3 + ] when ] map
     [
         { 
           [ "UABG" random spin insert-nth ] ! insertion
@@ -46,7 +46,7 @@ ERROR: incorrect-start-end-codons program ; ! "Program should start and end with
 
 : ile ( stack -- stack ) [ get-1 write1 ] suffix ; ! print character and pop it
 
-: met ( stack -- stack ) [ get-2 mod suffix ] suffix ; ! mod a b ;
+: met ( stack -- stack ) 2 suffix ; ! push 2 ;
 
 : val ( stack -- stack ) [ get-2 dip suffix ] suffix ; ! dip 
 
@@ -74,39 +74,44 @@ ERROR: incorrect-start-end-codons program ; ! "Program should start and end with
 
 : cys ( stack -- stack ) [ get-2 ^ suffix ] suffix ; ! ^
 
-: trp ( stack -- stack ) [ get-2 logn suffix ] suffix ; ! logn x n (maybe change)
+: trp ( stack -- stack ) [ get-1 >dec write ] suffix ; ! print number and pop it
 
 : arg ( stack -- stack ) get-1 call( stack -- stack ) ; inline ! i/call
 
 : gly ( stack -- stack ) [ get-2 swap 2array append ] suffix ; ! swap
 
+! unknown codons are ignored
 EBNF: parse-translation [=[
     start = "AUG"
-    phe = "UUU" | "UUC"                                 => [[ [ phe ] ]]
-    leu = "UUA" | "UUG" | "CUU" | "CUC" | "CUA" | "CUG" => [[ [ leu ] ]]
-    ile = "AUU" | "AUC" | "AUA"                         => [[ [ ile ] ]]
+    phe = ("UUU" | "UUC")                                 => [[ [ phe ] ]]
+    leu = ("UUA" | "UUG" | "CUU" | "CUC" | "CUA" | "CUG") => [[ [ leu ] ]]
+    ile = ("AUU" | "AUC" | "AUA")                         => [[ [ ile ] ]]
     met = "AUG"                                         => [[ [ met ] ]]
-    val = "GUU" | "GUC" | "GUA" | "GUG"                 => [[ [ val ] ]]
-    ser = "UCU" | "UCC" | "UCA" | "UCG" | "AGU" | "AGC" => [[ [ ser ] ]]
-    pro = "CCU" | "CCC" | "CCA" | "CCG"                 => [[ [ pro ] ]]
-    thr = "ACU" | "ACC" | "ACA" | "ACG"                 => [[ [ thr ] ]]
-    ala = "GCU" | "GCC" | "GCA" | "GCG"                 => [[ [ ala ] ]]
-    tyr = "UAU" | "UAC"                                 => [[ [ tyr ] ]]
-    his = "CAU" | "CAC"                                 => [[ [ his ] ]]
-    gln = "CAA" | "CAG"                                 => [[ [ gln ] ]]
-    asn = "AAU" | "AAC"                                 => [[ [ asn ] ]]
-    lys = "AAA" | "AAG"                                 => [[ [ lys ] ]]
-    asp = "GAU" | "GAC"                                 => [[ [ asp ] ]]
-    glu = "GAA" | "GAG"                                 => [[ [ glu ] ]]
-    cys = "UGU" | "UGC"                                 => [[ [ cys ] ]]
+    val = ("GUU" | "GUC" | "GUA" | "GUG")                 => [[ [ val ] ]]
+    ser = ("UCU" | "UCC" | "UCA" | "UCG" | "AGU" | "AGC") => [[ [ ser ] ]]
+    pro = ("CCU" | "CCC" | "CCA" | "CCG")                 => [[ [ pro ] ]]
+    thr = ("ACU" | "ACC" | "ACA" | "ACG")                 => [[ [ thr ] ]]
+    ala = ("GCU" | "GCC" | "GCA" | "GCG")                 => [[ [ ala ] ]]
+    tyr = ("UAU" | "UAC")                                 => [[ [ tyr ] ]]
+    his = ("CAU" | "CAC")                                 => [[ [ his ] ]]
+    gln = ("CAA" | "CAG")                                 => [[ [ gln ] ]]
+    asn = ("AAU" | "AAC")                                 => [[ [ asn ] ]]
+    lys = ("AAA" | "AAG")                                 => [[ [ lys ] ]]
+    asp = ("GAU" | "GAC")                                 => [[ [ asp ] ]]
+    glu = ("GAA" | "GAG")                                 => [[ [ glu ] ]]
+    cys = ("UGU" | "UGC")                                 => [[ [ cys ] ]]
     trp = "UGG"                                         => [[ [ trp ] ]]
-    arg = "CGU" | "CGC" | "CGA" | "CGG" | "AGA" | "AGG" => [[ [ arg ] ]]
-    gly = "GGU" | "GGC" | "GGA" | "GGG"                 => [[ [ gly ] ]]
-    end = ("U" | "A" | "G" | "C")+ ?[ length 2 <= ]? 
+    arg = ("CGU" | "CGC" | "CGA" | "CGG" | "AGA" | "AGG") => [[ [ arg ] ]]
+    gly = ("GGU" | "GGC" | "GGA" | "GGG")                 => [[ [ gly ] ]]
+    unknown = ("U" | "A" | "G" | "C")+                      => [[ [ ] ]]
 
-    amino-acid = phe|leu|ile|met|val|ser|pro|thr|ala|tyr|his|gln|asn|lys|asp|glu|cys|trp|arg|gly
+    amino-acid = phe|leu|ile|met|val|ser|pro|thr|ala|tyr|his|gln|asn|lys|asp|glu|cys|trp|arg|gly|unknown
     space = " "
-    code = start~ space~ (amino-acid space~)+ end~      => [[ compose-all ]]
+    code = start~ space~ (amino-acid space~)+ unknown~      => [[ compose-all ]]
 ]=]
+
+! maybe add debug version that prints stacl at the end too
+! MACRO: run-translation ( code -- quot )
+!     check process 
 
 ! PRIVATE>
