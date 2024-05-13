@@ -104,7 +104,7 @@ EBNF: parse-translation [=[
     trp = "UGG"                                           => [[ [ trp ] ]]
     arg = ("CGU" | "CGC" | "CGA" | "CGG" | "AGA" | "AGG") => [[ [ arg ] ]]
     gly = ("GGU" | "GGC" | "GGA" | "GGG")                 => [[ [ gly ] ]]
-    unknown = ("U" | "A" | "G" | "C")+                    => [[ [ ] ]]
+    unknown = ("U" | "A" | "G" | "C")+ ?[ length 3 <= ]?  => [[ [ ] ]]
 
     amino-acid = phe|leu|ile|met|val|ser|pro|thr|ala|tyr|his|gln|asn|lys|asp|glu|cys|trp|arg|gly|unknown
     space = " "
