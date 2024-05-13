@@ -1,4 +1,5 @@
-USING: arrays grouping io kernel math math.functions math.parser multiline peg peg.ebnf random ranges sequences sets strings ;
+USING: arrays command-line grouping io io.encodings.binary io.files kernel math math.functions math.parser multiline namespaces peg peg.ebnf random ranges sequences sets splitting strings ;
+FROM: namespaces => set ;
 
 IN: translation
 
@@ -110,8 +111,32 @@ EBNF: parse-translation [=[
     code = start~ space~ (amino-acid space~)+ unknown~      => [[ compose-all ]]
 ]=]
 
-! maybe add debug version that prints stacl at the end too
-! MACRO: run-translation ( code -- quot )
-!     check process 
-
 ! PRIVATE>
+
+! maybe add debug version that prints stacl at the end too
+MACRO: run-translation ( code -- quot )
+    check process mutation parse-translation '[ { } @ drop flush ] ;
+
+MACRO: run-translation-nomut ( code -- quot )
+    check process 3 group " " join parse-translation '[ { } @ drop flush ] ;
+
+: get-translation ( code -- result )
+    [ run-translaton ] with-string-writer ; inline
+
+<PRIVATE
+
+: (run-translation) ( code -- )
+    check process "nomut" get [ 3 group " " join ] [ mutation ] if parse-translation { } swap call( stack -- stack ) drop flush ;
+
+PRIVATE>
+
+! FIX BUG DOESN'T WORK
+: translation-main ( -- )
+    command-line get [ "-" ?head ] partition
+    [ [ set ] each ] dip [
+        read-contents (run-translation)
+    ] [
+        [ binary file-contents (run-translation) ] each
+    ] if-empty ; 
+
+MAIN: translation-main
