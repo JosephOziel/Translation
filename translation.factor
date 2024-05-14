@@ -130,7 +130,7 @@ MACRO: run-translation-nomut ( code -- quot )
 
 PRIVATE>
 
-! FIX BUG DOESN'T WORK
+! FIX BUG DOESN'T WORK. GIT CLONE FACTOR AND GET LATEST RELEASE
 : translation-main ( -- )
     command-line get [ "-" ?head ] partition
     [ [ set ] each ] dip [
